@@ -12,7 +12,7 @@ export async function getViewingKey(
     const seed = await getSeed();
 
     // Generate the UnifiedSpendingKey and obtain the Viewing Key
-    let spendingKey = new UnifiedSpendingKey(network, seed, accountIndex);
+    let spendingKey = UnifiedSpendingKey.from_seed(network, seed, accountIndex);
     let viewingKey = spendingKey.to_unified_full_viewing_key();
 
     return viewingKey.encode(network);

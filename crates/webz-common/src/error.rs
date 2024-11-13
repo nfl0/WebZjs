@@ -4,6 +4,8 @@ use wasm_bindgen::JsValue;
 pub enum Error {
     #[error("Invalid network string given: {0}")]
     InvalidNetwork(String),
+    #[error("Invalid amount: {0}")]
+    InvalidAmount(#[from] zcash_primitives::transaction::components::amount::BalanceError),
 }
 
 impl From<Error> for JsValue {

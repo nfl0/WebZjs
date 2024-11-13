@@ -18,7 +18,7 @@ use zcash_client_backend::proto::service::{
     compact_tx_streamer_client::CompactTxStreamerClient, ChainSpec,
 };
 use zcash_client_memory::MemoryWalletDb;
-use zcash_keys::keys::UnifiedFullViewingKey;
+use zcash_keys::keys::{UnifiedFullViewingKey, UnifiedSpendingKey};
 use zcash_primitives::transaction::TxId;
 
 pub type MemoryWallet<T> = Wallet<MemoryWalletDb<Network>, T>;
@@ -239,7 +239,7 @@ impl WebWallet {
     /// # Arguments
     ///
     /// * `account_id` - The ID of the account in this wallet to send funds from
-    /// * `to_address` - [ZIP316](https://zips.z.cash/zip-0316) encoded address to send funds to
+    /// * `to_address` - [ZIP316](https://zips.z.cash/zip-00316) encoded address to send funds to
     /// * `value` - Amount to send in Zatoshis (1 ZEC = 100_000_000 Zatoshis)
     ///
     /// # Returns
@@ -364,6 +364,36 @@ impl WebWallet {
         let db = self.inner.db.read().await;
         if let Some(address) = db.get_current_address(account_id.into())? {
             Ok(address.encode(&self.inner.network))
+        } else {
+            Err(Error::AccountNotFound(account_id))
+        }
+    }
+
+    /// Get the viewing key for a given account. This is returned as a string in canonical encoding
+    ///
+    /// # Arguments
+    ///
+    /// * `account_id` - The ID of the account to get the viewing key for
+    ///
+    pub async fn get_viewing_key(&self, account_id: u32) -> Result<String, Error> {
+        let db = self.inner.db.read().await;
+        if let Some(ufvk) = db.get_account(account_id.into())?.map(|a| a.viewing_key().clone()) {
+            Ok(ufvk.encode(&self.inner.network))
+        } else {
+            Err(Error::AccountNotFound(account_id))
+        }
+    }
+
+    /// Get the spending key for a given account. This is returned as a string in canonical encoding
+    ///
+    /// # Arguments
+    ///
+    /// * `account_id` - The ID of the account to get the spending key for
+    ///
+    pub async fn get_spending_key(&self, account_id: u32) -> Result<String, Error> {
+        let db = self.inner.db.read().await;
+        if let Some(usk) = db.get_account(account_id.into())?.map(|a| a.spending_key().clone()) {
+            Ok(usk.encode(&self.inner.network))
         } else {
             Err(Error::AccountNotFound(account_id))
         }

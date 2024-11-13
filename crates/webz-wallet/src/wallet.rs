@@ -374,6 +374,36 @@ where
         tracing::info!("Sending transactions");
         self.send_authorized_transactions(&txids).await
     }
+
+    /// Get the viewing key for a given account. This is returned as a string in canonical encoding
+    ///
+    /// # Arguments
+    ///
+    /// * `account_id` - The ID of the account to get the viewing key for
+    ///
+    pub async fn get_viewing_key(&self, account_id: AccountId) -> Result<String, Error> {
+        let db = self.db.read().await;
+        if let Some(ufvk) = db.get_account(account_id)?.map(|a| a.viewing_key().clone()) {
+            Ok(ufvk.encode(&self.network))
+        } else {
+            Err(Error::AccountNotFound(account_id.into()))
+        }
+    }
+
+    /// Get the spending key for a given account. This is returned as a string in canonical encoding
+    ///
+    /// # Arguments
+    ///
+    /// * `account_id` - The ID of the account to get the spending key for
+    ///
+    pub async fn get_spending_key(&self, account_id: AccountId) -> Result<String, Error> {
+        let db = self.db.read().await;
+        if let Some(usk) = db.get_account(account_id)?.map(|a| a.spending_key().clone()) {
+            Ok(usk.encode(&self.network))
+        } else {
+            Err(Error::AccountNotFound(account_id.into()))
+        }
+    }
 }
 
 pub(crate) fn usk_from_seed_str(
