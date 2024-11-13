@@ -1,6 +1,3 @@
-// Copyright 2024 ChainSafe Systems
-// SPDX-License-Identifier: Apache-2.0, MIT
-
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
@@ -35,6 +32,27 @@ impl UnifiedSpendingKey {
             inner: zcash_keys::keys::UnifiedSpendingKey::from_seed(
                 &network,
                 &seed,
+                AccountId::try_from(hd_index)?,
+            )?,
+        })
+    }
+
+    /// Construct a UnifiedSpendingKey from a seed
+    ///
+    /// # Arguments
+    ///
+    /// * `network` - Must be either "main" or "test"
+    /// * `seed` - A string representing the seed
+    /// * `hd_index` - [ZIP32](https://zips.z.cash/zip-0032) hierarchical deterministic index of the account
+    ///
+    pub fn from_seed(network: &str, seed: &str, hd_index: u32) -> Result<UnifiedSpendingKey, Error> {
+        let network = Network::from_str(network)?;
+        let mnemonic = Mnemonic::<English>::from_phrase(seed).map_err(|_| Error::InvalidSeedPhrase)?;
+        let seed_bytes = mnemonic.to_seed("");
+        Ok(Self {
+            inner: zcash_keys::keys::UnifiedSpendingKey::from_seed(
+                &network,
+                &seed_bytes,
                 AccountId::try_from(hd_index)?,
             )?,
         })
